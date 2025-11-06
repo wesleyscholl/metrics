@@ -44,8 +44,12 @@ RUN set -eux; \
     pkg-config \
     libssl-dev \
     python3 \
-    xz-utils; \
+    xz-utils \
+    zlib1g-dev \
+    libxml2-dev \
+    libxslt1-dev; \
   \
+  # Install Nokogiri + licensed gem
   gem install nokogiri -- --use-system-libraries; \
   gem install licensed; \
   \
