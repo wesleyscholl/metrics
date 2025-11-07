@@ -1,19 +1,24 @@
 /**Achievements list for users accounts */
 export default async function({list, login, data, computed, imports, graphql, queries, rest, rank, leaderboard}) {
   //Initialization
-  const {user} = await graphql(queries.achievements({login}))
-  const scores = {followers: user.followers.totalCount, created: user.repositories.totalCount, stars: user.popular.nodes?.[0]?.stargazers?.totalCount ?? 0, forks: Math.max(0, ...data.user.repositories.nodes.map(({forkCount}) => forkCount))}
-  const ranks = await graphql(queries.achievements.ranking(scores))
-  const requirements = {stars: 5, followers: 3, forks: 1, created: 1}
+  const { user } = await graphql(queries.achievements({ login }));
+  const scores = {
+    followers: user.followers?.totalCount ?? 0,
+    created: user.repositories?.totalCount ?? 0,
+    stars: user.popular?.nodes?.[0]?.stargazers?.totalCount ?? 0,
+    forks: Math.max(0, ...(data?.user?.repositories?.nodes?.map(({ forkCount }) => forkCount) ?? [0])),
+  };
+  const requirements = { stars: 5, followers: 3, forks: 1, created: 1 };
 
   //Developer
   {
-    const value = user.repositories.totalCount
-    const unlock = user.repositories.nodes?.shift()
-    const safeCount = (val) => typeof val === "number" ? val : 0;
+    const value = user.repositories?.totalCount ?? 0;
+    const unlock = user.repositories?.nodes?.[0];
+    const safeCount = (obj, key) => obj?.[key] ?? 0;
     const safeDate = (d) => d ? new Date(d) : null;
-    const devValue = safeCount(user.repositories.totalCount);
-    const devUnlock = user.repositories.nodes?.[0];
+    const devRepos = data.user.repositories ?? user.repositories;
+    const devValue = safeCount(devRepos, "totalCount");
+    const devUnlock = devRepos?.nodes?.[0];
     
     list.push({
       title: "Developer",
@@ -28,8 +33,9 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Forker
   {
-    const value = user.forks.totalCount
-    const unlock = user.forks.nodes?.shift()
+    const forkedRepos = user.repositories?.nodes?.filter(repo => repo.isFork) ?? [];
+    const value = forkedRepos.length;
+    const unlock = forkedRepos?.[0];
     list.push({
       title: "Forker",
       text: `Forked ${value} public repositor${imports.s(value, "y")}`,
@@ -43,8 +49,8 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Contributor
   {
-    const value = user.pullRequests.totalCount
-    const unlock = user.pullRequests.nodes?.shift()
+    const value = user.pullRequests?.totalCount ?? 0;
+    const unlock = user.pullRequests?.nodes?.[0];
 
     list.push({
       title: "Contributor",
@@ -59,8 +65,8 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Manager
   {
-    const value = user.projects.totalCount
-    const unlock = user.projects.nodes?.shift()
+    const value = user.projects?.totalCount ?? 0;
+    const unlock = user.projects?.nodes?.[0];
 
     list.push({
       title: "Manager",
@@ -75,8 +81,8 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Reviewer
   {
-    const value = user.contributionsCollection.pullRequestReviewContributions.totalCount
-    const unlock = user.contributionsCollection.pullRequestReviewContributions.nodes?.shift()
+    const value = user.contributionsCollection?.pullRequestReviewContributions?.totalCount ?? 0;
+    const unlock = user.contributionsCollection?.pullRequestReviewContributions?.nodes?.[0];
 
     list.push({
       title: "Reviewer",
@@ -91,8 +97,14 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Packager
   {
-    const value = user.packages.totalCount + ((await rest.packages.listPackagesForUser({package_type: "container", username: login}).catch(() => ({data: []})))?.data?.length || 0)
-    const unlock = user.packages.nodes?.shift()
+    const ghPackages = await rest.packages.listPackagesForUser({
+      package_type: "container",
+      username: login,
+    }).catch(() => ({ data: [] }));
+
+    const restCount = ghPackages?.data?.length ?? 0;
+    const value = (user.packages?.totalCount ?? 0) + restCount;
+    const unlock = user.packages?.nodes?.[0];
 
     list.push({
       title: "Packager",
@@ -155,12 +167,9 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Follower
   {
-    const value = user.following.totalCount
-    const unlock = user.following.nodes?.shift()
-
-
-    const followerValue = safeCount(user.followers.totalCount);
-    const followerUnlock = user.followers.nodes?.[0];
+    const followers = user?.followers;
+    const followerValue = safeCount(followers, "totalCount");
+    const followerUnlock = followers?.nodes?.[0];
    
     list.push({
       title: "Follower",
