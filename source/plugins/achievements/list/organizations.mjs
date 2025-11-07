@@ -2,7 +2,12 @@
 export default async function({list, login, data, computed, imports, graphql, queries, rest, rank, leaderboard}) {
   //Initialization
   const {organization} = await graphql(queries.achievements.organizations({login}))
-  const scores = {followers: 0, created: organization.repositories.totalCount, stars: organization.popular.nodes?.[0]?.stargazers?.totalCount ?? 0, forks: Math.max(0, ...data.user.repositories.nodes.map(({forkCount}) => forkCount))}
+  const scores = {
+    followers: 0,
+    created: organization.repositories.totalCount,
+    stars: organization.popular.nodes?.[0]?.stargazers?.totalCount ?? 0,
+    forks: Math.max(0, ...data.user.repositories.nodes.map(({ forkCount }) => forkCount))
+  };
   const ranks = await graphql(queries.achievements.ranking(scores))
   const requirements = {stars: 5, followers: 3, forks: 1, created: 1}
 
