@@ -14,8 +14,9 @@ RUN chmod +x /metrics/source/app/action/index.mjs \
   && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
   && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
   && apt-get update \
-  && apt-get install -y ruby-full git g++ cmake pkg-config libssl-dev libxml2-dev libxslt1-dev \
-  && gem install licensed nokogiri --use-system-libraries \
+  && apt-get install -y ruby-full git g++ cmake pkg-config libssl-dev libxml2-dev libxslt1-dev zlib1g-dev \
+  && export NOKOGIRI_USE_SYSTEM_LIBRARIES=1 \
+  && gem install nokogiri licensed \
   && apt-get update \
   && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 libx11-xcb1 libxtst6 lsb-release --no-install-recommends \
   # Install deno for miscellaneous scripts
