@@ -49,10 +49,6 @@ query AchievementsDefault {
     }
     projectsV2(first: 1, orderBy: {field: CREATED_AT, direction: ASC}) {
       totalCount
-      nodes {
-        title
-        createdAt
-      }
     }
     packages(first: 1, orderBy: {direction: ASC, field: CREATED_AT}) {
       totalCount
