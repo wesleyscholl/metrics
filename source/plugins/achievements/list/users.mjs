@@ -184,8 +184,8 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Influencer
   {
-    const value = user.followers.totalCount
-    const unlock = user.followers.nodes?.shift()
+    const value = user?.followers?.totalCount ?? 0
+    const unlockNode = user?.followers?.nodes?.[0] ?? null
 
     list.push({
       title: "Influencer",
@@ -194,15 +194,15 @@ export default async function({list, login, data, computed, imports, graphql, qu
         '<g transform="translate(4 4)" stroke-width="2" fill="none" fill-rule="evenodd"><path d="M33.432 1.924A23.922 23.922 0 0024 0c-3.945 0-7.668.952-10.95 2.638m-9.86 9.398A23.89 23.89 0 000 24a23.9 23.9 0 002.274 10.21m3.45 5.347a23.992 23.992 0 0012.929 7.845m13.048-.664c4.43-1.5 8.28-4.258 11.123-7.848m3.16-5.245A23.918 23.918 0 0048 24c0-1.87-.214-3.691-.619-5.439M40.416 6.493a24.139 24.139 0 00-1.574-1.355" stroke="#secondary" stroke-linecap="round"/><path stroke="#secondary" d="M4.582 33.859l1.613-7.946"/><circle stroke="#secondary" cx="6.832" cy="23" r="3"/><path stroke="#primary" d="M17.444 39.854l4.75 3.275"/><path stroke="#secondary" stroke-linecap="round" d="M7.647 14.952l-.433 4.527"/><circle stroke="#primary" cx="15" cy="38" r="3"/><path stroke="#primary" d="M22.216 9.516l.455 4.342"/><path stroke="#secondary" stroke-linecap="round" d="M34.272 6.952l-2.828 5.25"/><path stroke="#primary" stroke-linecap="square" d="M11.873 7.235l6.424-.736"/><path stroke="#secondary" stroke-linecap="round" d="M28.811 5.445l3.718-.671"/><path stroke="#primary" d="M42.392 22.006l.456-5.763M34.349 24.426l4.374.447"/><path d="M20 28c.267-1.727 1.973-3 4-3 2.08 0 3.787 1.318 4 3m-4-9a3 3 0 110 6 3 3 0 010-6z" stroke="#primary" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 14c5.523 0 10 4.477 10 10s-4.477 10-10 10-10-4.477-10-10 4.477-10 10-10z" stroke="#primary" stroke-linecap="round" stroke-linejoin="round"/><circle stroke="#secondary" cx="35.832" cy="4" r="3"/><circle stroke="#secondary" cx="44" cy="36" r="3"/><circle stroke="#secondary" cx="34.832" cy="37" r="3"/><circle stroke="#primary" cx="21.654" cy="6.437" r="3"/><path d="M25.083 48.102a3 3 0 100-6 3 3 0 000 6z" stroke="#primary"/><path d="M8.832 5a3 3 0 110 6 3 3 0 010-6z" stroke="#primary" stroke-linecap="round"/><circle stroke="#secondary" cx="4" cy="37" r="3"/><path d="M42.832 10a3 3 0 110 6 3 3 0 010-6z" stroke="#primary" stroke-linecap="round"/><path stroke="#secondary" stroke-linecap="round" d="M32.313 38.851l-1.786 1.661"/><circle stroke="#primary" cx="42" cy="25" r="3"/><path stroke="#primary" stroke-linecap="square" d="M18.228 32.388l-1.562 2.66"/><path stroke="#secondary" d="M37.831 36.739l2.951-.112"/></g>',
       ...rank(value, [1, 200, 500, 1000, 2500]),
       value,
-      unlock: new Date(unlock?.createdAt),
+      unlock: unlockNode?.createdAt ? new Date(unlockNode.createdAt) : null,
       leaderboard: leaderboard({user: ranks.user_rank.userCount, requirement: scores.followers >= requirements.followers, type: "users"}),
     })
   }
 
   //Maintainer
   {
-    const value = user.popular.nodes?.shift()?.stargazers?.totalCount ?? 0
-    const unlock = null
+    const value = user?.popular?.nodes?.[0]?.stargazers?.totalCount ?? 0
+    const unlockNode = user?.popular?.nodes?.[0] ?? null
 
     list.push({
       title: "Maintainer",
@@ -211,14 +211,15 @@ export default async function({list, login, data, computed, imports, graphql, qu
         '<g transform="translate(4 4)" fill="none" fill-rule="evenodd"><path d="M39 15h.96l4.038 3-.02-3H45a2 2 0 002-2V3a2 2 0 00-2-2H31a2 2 0 00-2 2v4.035" stroke="#secondary" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path stroke="#primary" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M36 5.014l-3 3 3 3M40 5.014l3 3-3 3"/><path d="M6 37a1 1 0 110 2 1 1 0 010-2m7 0a1 1 0 110 2 1 1 0 010-2m-2.448 1a1 1 0 11-2 0 1 1 0 012 0z" fill="#primary"/><path d="M1.724 15.05A23.934 23.934 0 000 24c0 .686.029 1.366.085 2.037m19.92 21.632c1.3.218 2.634.331 3.995.331a23.92 23.92 0 009.036-1.76m13.207-13.21A23.932 23.932 0 0048 24c0-1.363-.114-2.7-.332-4M25.064.022a23.932 23.932 0 00-10.073 1.725" stroke="#secondary" stroke-width="2" stroke-linecap="round"/><path d="M19 42.062V43a2 2 0 01-2 2H9.04l-4.038 3 .02-3H3a2 2 0 01-2-2V33a2 2 0 012-2h4.045" stroke="#secondary" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 0a6 6 0 110 12A6 6 0 016 0z" stroke="#primary" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path stroke="#primary" stroke-width="2" stroke-linecap="round" d="M6 3v6M3 6h6"/><path d="M42 36a6 6 0 110 12 6 6 0 010-12z" stroke="#primary" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path stroke="#primary" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M44.338 40.663l-3.336 3.331-1.692-1.686M31 31c-.716-2.865-3.578-5-7-5-3.423 0-6.287 2.14-7 5"/><path d="M24 16a5 5 0 110 10 5 5 0 010-10z" stroke="#primary" stroke-width="2" stroke-linecap="round"/><circle stroke="#primary" stroke-width="2" cx="24" cy="24" r="14"/></g>',
       ...rank(value, [1, 1000, 5000, 10000, 25000]),
       value,
-      unlock: new Date(unlock?.createdAt),
+      unlock: unlockNode?.createdAt ? new Date(unlockNode.createdAt) : null,
       leaderboard: leaderboard({user: ranks.repo_rank.repositoryCount, requirement: scores.stars >= requirements.stars, type: "repositories"}),
     })
   }
 
   //Inspirer
   {
-    const value = Math.max(0, ...data.user.repositories.nodes.map(({forkCount}) => forkCount))
+    const repoForkCounts = data?.user?.repositories?.nodes?.map(r => r?.forkCount ?? 0) ?? []
+    const value = repoForkCounts.length > 0 ? Math.max(...repoForkCounts) : 0
     const unlock = null
     list.push({
       title: "Inspirer",
@@ -234,7 +235,9 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Polyglot
   {
-    const value = new Set(data.user.repositories.nodes.flatMap(repository => repository.languages.edges.map(({node: {name}}) => name))).size
+    const repos = data?.user?.repositories?.nodes ?? []
+    const langNames = repos.flatMap(repo => repo?.languages?.edges?.map(e => e?.node?.name) ?? [])
+    const value = new Set(langNames.filter(Boolean)).size
     const unlock = null
 
     list.push({
@@ -250,7 +253,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Member
   {
-    const {years: value} = computed.registered
+    const {years: value = 0} = computed?.registered ?? {}
     const unlock = null
 
     list.push({
@@ -266,7 +269,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Sponsors
   {
-    const value = user.sponsorshipsAsSponsor.totalCount
+    const value = user?.sponsorshipsAsSponsor?.totalCount ?? 0
     const unlock = null
 
     list.push({
@@ -282,7 +285,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Deployer
   {
-    const value = computed.repositories?.deployments
+    const value = computed?.repositories?.deployments ?? 0
     const unlock = null
 
     list.push({
