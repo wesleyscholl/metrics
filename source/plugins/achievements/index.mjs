@@ -81,7 +81,19 @@ async function total({imports, graphql, queries}) {
           //Setup using GraphQL
           if (method === "graphql") {
             const queried = await graphql(queries.achievements.total())
-            Object.assign(total, Object.fromEntries(Object.entries(queried).map(([key, {count: value}]) => [key, value])))
+            total.projectsV2 = queried.data.viewer.projectsV2?.totalCount ?? 0
+
+            Object.assign(
+              total,
+              Object.fromEntries(
+                Object.entries(queried)
+                  .filter(([key, value]) => key !== "data") // skip top-level data wrapper
+                  .map(([key, val]) => {
+                    if (val?.count != null) return [key, val.count] // old behavior for legacy keys
+                    return [key, total[key]] // keep existing value if count missing
+                  })
+              )
+            )
           }
           //Setup using browser
           if (method === "browser") {
