@@ -7,10 +7,10 @@ export default async function({list, login, data, computed, imports, graphql, qu
   //Initialization
   const {user} = await graphql(queries.achievements({login}))
   const scores = {
-    followers:user.followers?.totalCount ?? 0,
-    created:user.repositories?.totalCount ?? 0,
-    stars:user.popular?.nodes?.[0]?.stargazers?.totalCount ?? 0,
-    forks:Math.max(0, ...(data?.user?.repositories?.nodes?.map(({forkCount}) => forkCount) ?? [0])),
+    followers:user.followers.totalCount,
+    created:user.repositories.totalCount,
+    stars:user.popular.nodes?.[0]?.stargazers.totalCount ?? 0,
+    forks:Math.max(0, ...data.user.repositories.nodes.map(({forkCount}) => forkCount)),
   }
   const ranks = await graphql(queries.achievements.ranking(scores))
   const requirements = {stars:5, followers:3, forks:1, created:1}
@@ -18,8 +18,8 @@ export default async function({list, login, data, computed, imports, graphql, qu
   //Developer
   {
     const devRepos = data.user.repositories ?? user.repositories
-    const devValue = safeCount(devRepos, "totalCount")
-    const devUnlock = devRepos?.nodes?.[0]
+    const devValue = devRepos.totalCount
+    const devUnlock = devRepos.nodes?.[0]
 
     list.push({
       title:"Developer",
@@ -207,8 +207,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Inspirer
   {
-    const repoForkCounts = data?.user?.repositories?.nodes?.map(r => r?.forkCount ?? 0) ?? []
-    const value = repoForkCounts.length > 0 ? Math.max(...repoForkCounts) : 0
+    const value = Math.max(0, ...data.user.repositories.nodes.map(({forkCount}) => forkCount))
     const unlock = null
     list.push({
       title:"Inspirer",
@@ -223,9 +222,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Polyglot
   {
-    const repos = data?.user?.repositories?.nodes ?? []
-    const langNames = repos.flatMap(repo => repo?.languages?.edges?.map(e => e?.node?.name) ?? [])
-    const value = new Set(langNames.filter(Boolean)).size
+    const value = new Set(data.user.repositories.nodes.flatMap(repository => repository.languages.edges.map(({node:{name}}) => name))).size
     const unlock = null
 
     list.push({
@@ -240,7 +237,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Member
   {
-    const {years:value = 0} = computed?.registered ?? {}
+    const {years:value} = computed.registered
     const unlock = null
 
     list.push({
@@ -270,7 +267,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Deployer
   {
-    const value = computed?.repositories?.deployments ?? 0
+    const value = computed.repositories?.deployments ?? 0
     const unlock = null
 
     list.push({
