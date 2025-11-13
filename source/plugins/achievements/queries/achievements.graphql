@@ -1,10 +1,18 @@
 query AchievementsDefault {
 
   user(login: "$login") {
-    repositories(first: 1, privacy: PUBLIC, affiliations: OWNER, orderBy: {field: CREATED_AT, direction: ASC}) {
+    repositories(first: 100, privacy: PUBLIC, affiliations: OWNER, orderBy: {field: CREATED_AT, direction: ASC}) {
       nodes {
         createdAt
         nameWithOwner
+        forkCount
+        languages(first: 10) {
+          edges {
+            node {
+              name
+            }
+          }
+        }
       }
       totalCount
     }
@@ -52,20 +60,8 @@ query AchievementsDefault {
     }
     packages(first: 1, orderBy: {direction: ASC, field: CREATED_AT}) {
       totalCount
-      #nodes { This requires additional scopes :/
-      #  name
-      #  packageType
-      #  versions(first: 1, orderBy: {direction: ASC, field: CREATED_AT}) {
-      #    nodes {
-      #      id
-      #    }
-      #  }
-      #}
     }
     organizations(first: 1) {
-      #nodes {
-      #  name
-      #}
       totalCount
     }
     gists(first: 1, orderBy: {field: CREATED_AT, direction: ASC}) {

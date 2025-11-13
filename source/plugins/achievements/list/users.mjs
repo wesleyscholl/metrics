@@ -4,32 +4,8 @@ export default async function({list, login, data, computed, imports, graphql, qu
   const safeCount = (obj, key) => obj?.[key] ?? 0
   const safeDate = d => d ? new Date(d) : null
 
-  //Debug logging
-  console.log('=== ACHIEVEMENTS DEBUG START ===')
-  console.log('Login:', login)
-  console.log('Data structure:', {
-    hasData: !!data,
-    hasUser: !!data?.user,
-    hasRepositories: !!data?.user?.repositories,
-    hasNodes: !!data?.user?.repositories?.nodes,
-    repositoryCount: data?.user?.repositories?.nodes?.length || 0
-  })
-  console.log('Computed structure:', {
-    hasComputed: !!computed,
-    computedKeys: computed ? Object.keys(computed) : [],
-    hasRegistered: !!computed?.registered,
-    hasRepositories: !!computed?.repositories,
-    repositoriesKeys: computed?.repositories ? Object.keys(computed.repositories) : []
-  })
-
   //Initialization
   const {user} = await graphql(queries.achievements({login}))
-  console.log('User data from GraphQL:', {
-    followers: user.followers?.totalCount,
-    repositories: user.repositories?.totalCount,
-    popular: user.popular?.nodes?.length || 0,
-    firstPopularStars: user.popular?.nodes?.[0]?.stargazers?.totalCount
-  })
 
   const scores = {
     followers:user.followers.totalCount,
@@ -37,10 +13,8 @@ export default async function({list, login, data, computed, imports, graphql, qu
     stars:user.popular.nodes?.[0]?.stargazers.totalCount ?? 0,
     forks:user.repositories.nodes?.length > 0 ? Math.max(0, ...user.repositories.nodes.map(({forkCount}) => forkCount)) : 0,
   }
-  console.log('Calculated scores:', scores)
   
   const ranks = await graphql(queries.achievements.ranking(scores))
-  console.log('Ranks received:', ranks)
   
   const requirements = {stars:5, followers:3, forks:1, created:1}
 
@@ -236,13 +210,9 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Inspirer
   {
-    console.log('=== INSPIRER DEBUG ===')
     const repoNodes = user.repositories?.nodes || []
     const forkCounts = repoNodes.map(({forkCount}) => forkCount || 0)
-    console.log('Repo nodes for forks:', repoNodes.length)
-    console.log('All fork counts:', forkCounts)
     const value = forkCounts.length > 0 ? Math.max(0, ...forkCounts) : 0
-    console.log('Max fork count (Inspirer value):', value)
     const unlock = null
     list.push({
       title:"Inspirer",
@@ -257,22 +227,9 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Polyglot
   {
-    console.log('=== POLYGLOT DEBUG ===')
-    console.log('User repositories nodes length:', user.repositories?.nodes?.length || 0)
-    console.log('Data repositories nodes length:', data.user?.repositories?.nodes?.length || 0)
-    
     const repoNodes = user.repositories?.nodes || []
-    console.log('Using repo nodes length:', repoNodes.length)
-    console.log('First few repos with languages:', repoNodes.slice(0, 3).map(repo => ({
-      name: repo.name,
-      languageCount: repo.languages?.edges?.length || 0,
-      languages: repo.languages?.edges?.map(e => e.node?.name) || []
-    })))
-    
     const allLanguages = repoNodes.flatMap(repository => repository.languages?.edges?.map(({node: {name}}) => name) || [])
-    console.log('All languages found:', allLanguages)
     const value = new Set(allLanguages).size
-    console.log('Unique language count (Polyglot value):', value)
     const unlock = null
 
     list.push({
@@ -317,11 +274,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Deployer
   {
-    console.log('=== DEPLOYER DEBUG ===')
-    console.log('Computed repositories object:', computed.repositories)
-    console.log('Deployments value:', computed.repositories?.deployments)
     const value = computed.repositories?.deployments ?? 0
-    console.log('Final deployer value:', value)
     const unlock = null
 
     list.push({
@@ -443,7 +396,4 @@ export default async function({list, login, data, computed, imports, graphql, qu
       unlock:new Date(unlock?.createdAt),
     })
   }
-  
-  console.log('=== ACHIEVEMENTS DEBUG END ===')
-  console.log('Total achievements created:', list.length)
 }
