@@ -274,7 +274,12 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Deployer
   {
-    const value = computed.repositories?.deployments ?? 0
+    // Try multiple sources for deployment data - computed should be primary, GraphQL as fallback
+    const computedDeployments = computed.repositories?.deployments ?? 0
+    const graphqlDeployments = user.repositories?.nodes?.reduce((sum, repo) => sum + (repo.deployments?.totalCount ?? 0), 0) ?? 0
+    
+    // Use the higher value (computed should be more complete as it includes data from base plugin)
+    const value = Math.max(computedDeployments, graphqlDeployments)
     const unlock = null
 
     list.push({
@@ -335,7 +340,9 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Explorer
   {
-    const value = !/doesn’t have any starred topics yet/i.test((await imports.axios.get(`https://github.com/stars/${login}/topics`)).data)
+    // Use starred repositories count as a reliable indicator of GitHub exploration
+    const starredCount = user.starredRepositories?.totalCount ?? 0
+    const value = starredCount > 0
     const unlock = null
 
     list.push({

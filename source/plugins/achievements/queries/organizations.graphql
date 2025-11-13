@@ -5,6 +5,9 @@ query AchievementsOrganizations {
         createdAt
         nameWithOwner
         forkCount
+        deployments {
+          totalCount
+        }
         languages(first: 10) {
           edges {
             node {
@@ -20,6 +23,9 @@ query AchievementsOrganizations {
         createdAt
         nameWithOwner
         forkCount
+        deployments {
+          totalCount
+        }
         languages(first: 10) {
           edges {
             node {

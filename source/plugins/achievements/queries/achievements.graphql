@@ -6,6 +6,9 @@ query AchievementsDefault {
         createdAt
         nameWithOwner
         forkCount
+        deployments {
+          totalCount
+        }
         languages(first: 10) {
           edges {
             node {
