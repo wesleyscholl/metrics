@@ -35,7 +35,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
     followers:user.followers.totalCount,
     created:user.repositories.totalCount,
     stars:user.popular.nodes?.[0]?.stargazers.totalCount ?? 0,
-    forks:Math.max(0, ...data.user.repositories.nodes.map(({forkCount}) => forkCount)),
+    forks:user.repositories.nodes?.length > 0 ? Math.max(0, ...user.repositories.nodes.map(({forkCount}) => forkCount)) : 0,
   }
   console.log('Calculated scores:', scores)
   
@@ -46,7 +46,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Developer
   {
-    const devRepos = data.user.repositories ?? user.repositories
+    const devRepos = user.repositories
     const devValue = devRepos.totalCount
     const devUnlock = devRepos.nodes?.[0]
 
@@ -237,9 +237,11 @@ export default async function({list, login, data, computed, imports, graphql, qu
   //Inspirer
   {
     console.log('=== INSPIRER DEBUG ===')
-    const forkCounts = data.user.repositories.nodes.map(({forkCount}) => forkCount)
+    const repoNodes = user.repositories?.nodes || []
+    const forkCounts = repoNodes.map(({forkCount}) => forkCount || 0)
+    console.log('Repo nodes for forks:', repoNodes.length)
     console.log('All fork counts:', forkCounts)
-    const value = Math.max(0, ...forkCounts)
+    const value = forkCounts.length > 0 ? Math.max(0, ...forkCounts) : 0
     console.log('Max fork count (Inspirer value):', value)
     const unlock = null
     list.push({
@@ -256,14 +258,18 @@ export default async function({list, login, data, computed, imports, graphql, qu
   //Polyglot
   {
     console.log('=== POLYGLOT DEBUG ===')
-    console.log('Repository nodes length:', data.user.repositories.nodes.length)
-    console.log('First few repos with languages:', data.user.repositories.nodes.slice(0, 3).map(repo => ({
+    console.log('User repositories nodes length:', user.repositories?.nodes?.length || 0)
+    console.log('Data repositories nodes length:', data.user?.repositories?.nodes?.length || 0)
+    
+    const repoNodes = user.repositories?.nodes || []
+    console.log('Using repo nodes length:', repoNodes.length)
+    console.log('First few repos with languages:', repoNodes.slice(0, 3).map(repo => ({
       name: repo.name,
       languageCount: repo.languages?.edges?.length || 0,
       languages: repo.languages?.edges?.map(e => e.node?.name) || []
     })))
     
-    const allLanguages = data.user.repositories.nodes.flatMap(repository => repository.languages.edges.map(({node: {name}}) => name))
+    const allLanguages = repoNodes.flatMap(repository => repository.languages?.edges?.map(({node: {name}}) => name) || [])
     console.log('All languages found:', allLanguages)
     const value = new Set(allLanguages).size
     console.log('Unique language count (Polyglot value):', value)
