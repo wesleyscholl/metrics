@@ -2,12 +2,22 @@
 export default async function({list, login, data, computed, imports, graphql, queries, rest, rank, leaderboard}) {
   //Initialization
   const {organization} = await graphql(queries.achievements.organizations({login}))
+
+  //Debug logging for achievements plugin - raw GraphQL data for organization
+  console.debug(`metrics/compute/plugins > achievements > organization data keys: ${Object.keys(organization).join(", ")}`)
+  console.debug("metrics/compute/plugins > achievements > organization projects data:", JSON.stringify({
+    projects: organization.projects ? {totalCount: organization.projects.totalCount, hasNodes: !!organization.projects.nodes} : "undefined"
+  }))
+  console.debug("metrics/compute/plugins > achievements > organization packages data:", JSON.stringify({
+    packages: organization.packages ? {totalCount: organization.packages.totalCount, hasNodes: !!organization.packages.nodes} : "undefined"
+  }))
+
   const scores = {
     followers: 0,
     created: organization.repositories.totalCount,
     stars: organization.popular.nodes?.[0]?.stargazers?.totalCount ?? 0,
     forks: Math.max(0, ...data.user.repositories.nodes.map(({ forkCount }) => forkCount))
-  };
+  }
   const ranks = await graphql(queries.achievements.ranking(scores))
   const requirements = {stars: 5, followers: 3, forks: 1, created: 1}
 
@@ -44,8 +54,15 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Managers
   {
+    //Debug logging for Managers achievement
+    console.debug("metrics/compute/plugins > achievements > Managers (org) achievement data:", JSON.stringify({
+      "organization.projects": organization.projects ? {totalCount: organization.projects.totalCount, nodes: organization.projects.nodes?.length} : "undefined"
+    }))
+
     const value = organization.projects.totalCount
     const unlock = organization.projects.nodes?.shift()
+
+    console.debug(`metrics/compute/plugins > achievements > Managers (org) calculated value: ${value}`)
 
     list.push({
       title: "Managers",
@@ -60,8 +77,30 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Packagers
   {
-    const value = organization.packages.totalCount + ((await rest.packages.listPackagesForOrganization({package_type: "container", org: login}).catch(() => ({data: []})))?.data?.length || 0)
+    //Debug logging for Packagers achievement - REST API call
+    console.debug(`metrics/compute/plugins > achievements > Packagers (org) making REST API call for org: ${login}`)
+
+    const restPackages = await rest.packages.listPackagesForOrganization({
+      package_type: "container",
+      org: login
+    }).catch(error => {
+      console.debug("metrics/compute/plugins > achievements > Packagers (org) REST API error:", error.message)
+      return {data: []}
+    })
+
+    console.debug("metrics/compute/plugins > achievements > Packagers (org) REST API response:", JSON.stringify({
+      dataLength: restPackages?.data?.length ?? 0,
+      hasData: !!restPackages?.data
+    }))
+
+    const value = organization.packages.totalCount + (restPackages?.data?.length || 0)
     const unlock = organization.packages.nodes?.shift()
+
+    console.debug("metrics/compute/plugins > achievements > Packagers (org) calculated values:", JSON.stringify({
+      graphqlCount: organization.packages.totalCount,
+      restCount: restPackages?.data?.length || 0,
+      totalValue: value
+    }))
 
     list.push({
       title: "Packagers",

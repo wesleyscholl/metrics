@@ -1,5 +1,5 @@
 /**Achievements list for users accounts */
-export default async function({list, login, data, computed, imports, graphql, queries, rest, rank, leaderboard}) {
+export default async function({list, login, data: _data, computed, imports, graphql, queries, rest, rank, leaderboard}) {
   //Helper functions
   const safeCount = (obj, key) => obj?.[key] ?? 0
   const safeDate = d => d ? new Date(d) : null
@@ -7,15 +7,25 @@ export default async function({list, login, data, computed, imports, graphql, qu
   //Initialization
   const {user} = await graphql(queries.achievements({login}))
 
+  //Debug logging for achievements plugin - raw GraphQL data
+  console.debug(`metrics/compute/plugins > achievements > user data keys: ${Object.keys(user).join(", ")}`)
+  console.debug("metrics/compute/plugins > achievements > projects data:", JSON.stringify({
+    projects: user.projects ? {totalCount: user.projects.totalCount, hasNodes: !!user.projects.nodes} : "undefined",
+    projectsV2: user.projectsV2 ? {totalCount: user.projectsV2.totalCount} : "undefined"
+  }))
+  console.debug("metrics/compute/plugins > achievements > packages data:", JSON.stringify({
+    packages: user.packages ? {totalCount: user.packages.totalCount, hasNodes: !!user.packages.nodes} : "undefined"
+  }))
+
   const scores = {
     followers:user.followers.totalCount,
     created:user.repositories.totalCount,
     stars:user.popular.nodes?.[0]?.stargazers.totalCount ?? 0,
     forks:user.repositories.nodes?.length > 0 ? Math.max(0, ...user.repositories.nodes.map(({forkCount}) => forkCount)) : 0,
   }
-  
+
   const ranks = await graphql(queries.achievements.ranking(scores))
-  
+
   const requirements = {stars:5, followers:3, forks:1, created:1}
 
   //Developer
@@ -66,8 +76,16 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Manager
   {
+    //Debug logging for Manager achievement
+    console.debug("metrics/compute/plugins > achievements > Manager achievement data:", JSON.stringify({
+      "user.projects": user.projects ? {totalCount: user.projects.totalCount, nodes: user.projects.nodes?.length} : "undefined",
+      "user.projectsV2": user.projectsV2 ? {totalCount: user.projectsV2.totalCount} : "undefined"
+    }))
+
     const value = user.projects?.totalCount ?? 0
     const unlock = user.projects?.nodes?.[0]
+
+    console.debug(`metrics/compute/plugins > achievements > Manager calculated value: ${value}`)
 
     list.push({
       title:"Manager",
@@ -96,14 +114,31 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Packager
   {
+    //Debug logging for Packager achievement - REST API call
+    console.debug(`metrics/compute/plugins > achievements > Packager making REST API call for user: ${login}`)
+
     const ghPackages = await rest.packages.listPackagesForUser({
       package_type:"container",
       username:login,
-    }).catch(() => ({data:[]}))
+    }).catch(error => {
+      console.debug("metrics/compute/plugins > achievements > Packager REST API error:", error.message)
+      return {data:[]}
+    })
+
+    console.debug("metrics/compute/plugins > achievements > Packager REST API response:", JSON.stringify({
+      dataLength: ghPackages?.data?.length ?? 0,
+      hasData: !!ghPackages?.data
+    }))
 
     const restCount = ghPackages?.data?.length ?? 0
     const value = (user.packages?.totalCount ?? 0) + restCount
     const unlock = user.packages?.nodes?.[0]
+
+    console.debug("metrics/compute/plugins > achievements > Packager calculated values:", JSON.stringify({
+      graphqlCount: user.packages?.totalCount ?? 0,
+      restCount,
+      totalValue: value
+    }))
 
     list.push({
       title:"Packager",
@@ -274,11 +309,11 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Deployer
   {
-    // Try multiple sources for deployment data - computed should be primary, GraphQL as fallback
+    //Try multiple sources for deployment data - computed should be primary, GraphQL as fallback
     const computedDeployments = computed.repositories?.deployments ?? 0
     const graphqlDeployments = user.repositories?.nodes?.reduce((sum, repo) => sum + (repo.deployments?.totalCount ?? 0), 0) ?? 0
-    
-    // Use the higher value (computed should be more complete as it includes data from base plugin)
+
+    //Use the higher value (computed should be more complete as it includes data from base plugin)
     const value = Math.max(computedDeployments, graphqlDeployments)
     const unlock = null
 
@@ -340,7 +375,7 @@ export default async function({list, login, data, computed, imports, graphql, qu
 
   //Explorer
   {
-    // Use starred repositories count as a reliable indicator of GitHub exploration
+    //Use starred repositories count as a reliable indicator of GitHub exploration
     const starredCount = user.starredRepositories?.totalCount ?? 0
     const hasStarredRepos = starredCount > 0
     const unlock = null
