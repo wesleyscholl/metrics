@@ -87,10 +87,10 @@ async function total({imports, graphql, queries}) {
               total,
               Object.fromEntries(
                 Object.entries(queried)
-                  .filter(([key, value]) => key !== "data") // skip top-level data wrapper
+                  .filter(([key, _value]) => key !== "data") //skip top-level data wrapper
                   .map(([key, val]) => {
-                    if (val?.count != null) return [key, val.count] // old behavior for legacy keys
-                    return [key, total[key]] // keep existing value if count missing
+                    if (val?.count !== null) return [key, val.count] //old behavior for legacy keys
+                    return [key, total[key]] //keep existing value if count missing
                   })
               )
             )
